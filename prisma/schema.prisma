@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -6,8 +7,127 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+=======
+generator client {
+  provider = "prisma-client-js"
+>>>>>>> 2276f71e4da2e43eff143b8edc97c1ddb3eac9a2
 }
 
 datasource db {
   provider = "postgresql"
+<<<<<<< HEAD
+=======
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// NextAuth Models
+// Required models for NextAuth.js compatibility.
+// -----------------------------------------------------------------------------
+
+model Account {
+  id                 String  @id @default(uuid())
+  userId             String  @map("user_id")
+  type               String
+  provider           String
+  providerAccountId  String  @map("provider_account_id")
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  
+  accounts      Account[]
+  sessions      Session[]
+  resumes       Resume[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// -----------------------------------------------------------------------------
+// AscendCV.Ai Core Models
+// -----------------------------------------------------------------------------
+
+enum ResumeStatus {
+  DRAFT
+  COMPLETED
+}
+
+model Resume {
+  id           String             @id @default(uuid())
+  userId       String             @map("user_id")
+  
+  title        String             @default("Untitled Resume")
+  primaryColor String             @default("#3B82F6")
+  fontFamily   String             @default("Inter")
+  margin       Float              @default(0.75) // Values typically 0.5 to 1.5
+  status       ResumeStatus       @default(DRAFT)
+  
+  // JSON field for flexible ordering of simple sections (e.g. Education, Skills)
+  sections     Json               @default("[]")
+  
+  lastModified DateTime           @updatedAt @map("last_modified")
+
+  // Relationships
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experiences  ExperienceEntry[]
+
+  @@map("resumes")
+}
+
+model ExperienceEntry {
+  id          String    @id @default(uuid())
+  resumeId    String    @map("resume_id")
+  
+  company     String
+  role        String
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
+  isCurrent   Boolean   @default(false) @map("is_current")
+  
+  // PostgreSQL supports string array for the AI refined bullets.
+  // Validation for > 10 characters and max 10 bullets will happen at the application layer.
+  bullets     String[]
+  
+  order       Int       @default(0) // Field to track sequence for drag-and-drop
+
+  // Relationships
+  resume      Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("experience_entries")
+>>>>>>> 2276f71e4da2e43eff143b8edc97c1ddb3eac9a2
 }
