@@ -60,26 +60,25 @@ export default function ResumeBuilder() {
     if (!file) return;
 
     setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file); // Ensure the key is "file" to match the backend
+
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await fetch('/api/upload-resume', {
-        method: 'POST',
-        body: formData,
+      const response = await fetch("/api/upload-resume", {
+        method: "POST",
+        body: formData, // Do NOT set headers; the browser does this for FormData
       });
-      
-      if (!response.ok) throw new Error("Failed to process PDF");
-      
-      const result = await response.json();
-      if(result.success && result.data) {
-        setResumeData(result.data);
-      } else {
-        alert("Failed to extract data from PDF.");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to process PDF");
       }
-    } catch(error) {
-      console.error(error);
-      alert("AI Error parsing PDF.");
+
+      const result = await response.json();
+      setResumeData(result);
+    } catch (err: any) {
+      console.error("Upload Error:", err.message);
+      alert(err.message);
     } finally {
       setIsUploading(false);
     }
