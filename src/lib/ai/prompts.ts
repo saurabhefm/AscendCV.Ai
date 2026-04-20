@@ -20,5 +20,5 @@ Act as an expert career coach. Your task is to refine resume bullet points using
  * Helper to generate the exact user message based on the input and industry.
  */
 export const buildRefinementUserMessage = (rawBullet: string, industry: string) => {
-  return \`Input:\n- Raw Bullet Point: \${rawBullet}\n- Industry: \${industry}\`;
+  return `Input:\n- Raw Bullet Point: ${rawBullet}\n- Industry: ${industry}`;
 };

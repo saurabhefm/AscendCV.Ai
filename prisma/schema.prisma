@@ -1,22 +1,14 @@
-<<<<<<< HEAD
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-=======
-generator client {
   provider = "prisma-client-js"
->>>>>>> 2276f71e4da2e43eff143b8edc97c1ddb3eac9a2
 }
 
 datasource db {
   provider = "postgresql"
-<<<<<<< HEAD
-=======
   url      = env("DATABASE_URL")
 }
 
@@ -129,5 +121,4 @@ model ExperienceEntry {
   resume      Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   @@map("experience_entries")
->>>>>>> 2276f71e4da2e43eff143b8edc97c1ddb3eac9a2
 }

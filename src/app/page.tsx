@@ -1,64 +1,152 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
+export default function ResumeBuilder() {
+  const [inputText, setInputText] = useState("");
+  const [resumeData, setResumeData] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [template, setTemplate] = useState('modern'); // 'modern' or 'classic'
+  const resumeRef = useRef<HTMLDivElement>(null);
+
+  const handleGenerate = async () => {
+    if (!inputText) return;
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/parse-resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rawText: inputText }),
+      });
+      const data = await response.json();
+      if(data.success && data.data) {
+        setResumeData(data.data);
+      } else {
+        alert("Failed to parse resume.");
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const downloadPDF = async () => {
+    const element = resumeRef.current;
+    if(!element) return;
+    const canvas = await html2canvas(element, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save("My_AI_Resume.pdf");
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <nav className="p-4 border-b bg-white flex justify-between items-center">
+        <h1 className="font-bold text-xl text-blue-600">AscendCV.Ai</h1>
+        {resumeData && (
+          <button 
+            onClick={downloadPDF}
+            className="bg-slate-900 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-600 transition"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            Download PDF
+          </button>
+        )}
+      </nav>
+
+      <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <section className="space-y-6">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border">
+            <h2 className="font-bold mb-4">1. Enter Experience</h2>
+            <textarea 
+              className="w-full h-60 p-4 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Paste your raw career details here..."
+              onChange={(e) => setInputText(e.target.value)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <button 
+              onClick={handleGenerate}
+              className="w-full mt-4 bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-100"
+            >
+              {isGenerating ? "Processing..." : "Generate AI Resume"}
+            </button>
+          </div>
+
+          <div>
+            <h2 className="font-bold mb-4">2. Choose Template</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => setTemplate('classic')}
+                className={`p-4 border-2 rounded-xl text-left ${template === 'classic' ? 'border-blue-500 bg-blue-50' : 'border-slate-100'}`}
+              >
+                <div className="w-full h-24 bg-white border mb-2 shadow-sm rounded flex flex-col p-2 gap-1">
+                  <div className="h-2 w-1/2 bg-slate-200" />
+                  <div className="h-1 w-full bg-slate-100" />
+                  <div className="h-1 w-full bg-slate-100" />
+                </div>
+                <p className="font-bold text-sm">Classic HBS</p>
+              </button>
+              
+              <button 
+                onClick={() => setTemplate('modern')}
+                className={`p-4 border-2 rounded-xl text-left ${template === 'modern' ? 'border-blue-500 bg-blue-50' : 'border-slate-100'}`}
+              >
+                <div className="w-full h-24 bg-white border mb-2 shadow-sm rounded flex flex-col items-center p-2 gap-1">
+                  <div className="h-4 w-4 rounded-full bg-blue-100 mb-1" />
+                  <div className="h-2 w-2/3 bg-slate-200" />
+                  <div className="h-1 w-full bg-slate-100" />
+                </div>
+                <p className="font-bold text-sm">Ultra Modern</p>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* --- Resume Preview Area --- */}
+        <section className="bg-slate-200 p-8 rounded-3xl overflow-auto h-[800px] flex justify-center">
+          <div 
+            ref={resumeRef}
+            className={`bg-white w-[595px] min-h-[842px] p-12 shadow-2xl transition-all ${template === 'modern' ? 'border-t-8 border-blue-600' : ''}`}
           >
-            Documentation
-          </a>
-        </div>
+            {resumeData ? (
+              <div>
+                <h1 className={`text-3xl font-black ${template === 'modern' ? 'text-blue-600' : 'text-slate-900'}`}>
+                  {resumeData.basics.name}
+                </h1>
+                <p className="text-slate-500 font-medium mb-8 flex justify-between">
+                  <span>{resumeData.basics.email} | {resumeData.basics.phone}</span>
+                  <span>{resumeData.basics.location}</span>
+                </p>
+                
+                {resumeData.summary && (
+                  <p className="text-slate-700 text-sm mb-8 leading-relaxed">
+                    {resumeData.summary}
+                  </p>
+                )}
+                
+                <h3 className="font-bold border-b-2 mb-4 uppercase tracking-widest text-xs">Experience</h3>
+                {resumeData.experience.map((exp: any, i: number) => (
+                  <div key={i} className="mb-6">
+                    <p className="font-bold text-slate-800">{exp.company} — {exp.role}</p>
+                    <p className="text-xs text-slate-500 mb-2 uppercase tracking-wide">
+                      {exp.startDate} - {exp.isCurrent ? "Present" : exp.endDate || ""}
+                    </p>
+                    <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 mt-2">
+                      {exp.bullets.map((b: string, j: number) => (
+                        <li key={j} className="leading-relaxed">{b}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-slate-300 mt-40">Your AI Resume will appear here...</div>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
