@@ -8,7 +8,7 @@ export default function ResumeBuilder() {
   const [inputText, setInputText] = useState("");
   const [resumeData, setResumeData] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [template, setTemplate] = useState('professional'); 
+  const [template, setTemplate] = useState('classic'); 
   const resumeRef = useRef<HTMLDivElement>(null);
 
   const handleGenerate = async () => {
@@ -94,18 +94,47 @@ export default function ResumeBuilder() {
             <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">2. Choose Style</h2>
             <div className="grid grid-cols-2 gap-4">
               <button 
-                onClick={() => setTemplate('professional')}
-                className={`p-4 border-2 rounded-2xl text-left transition-all ${template === 'professional' ? 'border-blue-600 bg-blue-50' : 'bg-white border-slate-100'}`}
+                onClick={() => setTemplate('classic')}
+                className={`p-4 border-2 rounded-2xl text-left transition-all flex flex-col items-center ${template === 'classic' ? 'border-blue-600 bg-blue-50 scale-[1.02] shadow-md' : 'bg-white border-slate-100 hover:border-slate-300'}`}
               >
-                <p className="font-bold">Professional</p>
-                <p className="text-xs text-slate-400">Clean & ATS-friendly</p>
+                {/* Classic Miniature */}
+                <div className="w-full h-32 bg-white border border-slate-200 mb-3 shadow-sm rounded flex flex-col p-3 gap-2 overflow-hidden pointer-events-none">
+                  <div className="h-3 w-3/4 bg-slate-300 mx-auto" />
+                  <div className="h-1.5 w-1/2 bg-slate-200 mx-auto mb-2" />
+                  <div className="h-1 w-full bg-slate-200" />
+                  <div className="h-1 w-full bg-slate-200" />
+                  <div className="h-1 w-5/6 bg-slate-200" />
+                </div>
+                <div className="w-full">
+                  <p className="font-bold text-slate-800">Classic HBS</p>
+                  <p className="text-[10px] text-slate-500">Top-to-bottom standard</p>
+                </div>
               </button>
+              
               <button 
-                onClick={() => setTemplate('creative')}
-                className={`p-4 border-2 rounded-2xl text-left transition-all ${template === 'creative' ? 'border-blue-600 bg-blue-50' : 'bg-white border-slate-100'}`}
+                onClick={() => setTemplate('modern')}
+                className={`p-4 border-2 rounded-2xl text-left transition-all flex flex-col items-center ${template === 'modern' ? 'border-blue-600 bg-blue-50 scale-[1.02] shadow-md' : 'bg-white border-slate-100 hover:border-slate-300'}`}
               >
-                <p className="font-bold">Creative</p>
-                <p className="text-xs text-slate-400">Stand out visually</p>
+                {/* Modern Miniature */}
+                <div className="w-full h-32 bg-white border border-slate-200 mb-3 shadow-sm rounded flex flex-col overflow-hidden pointer-events-none relative">
+                  <div className="h-3 w-full bg-blue-600" />
+                  <div className="flex flex-1">
+                    <div className="w-1/3 border-r border-slate-100 bg-slate-50 p-2 flex flex-col gap-1.5">
+                      <div className="h-2 w-full bg-slate-300 rounded-full" />
+                      <div className="h-1 w-full bg-slate-200" />
+                    </div>
+                    <div className="w-2/3 p-2 flex flex-col gap-1.5">
+                      <div className="h-2 w-3/4 bg-slate-300 rounded-full" />
+                      <div className="h-1 w-full bg-slate-200" />
+                      <div className="h-1 w-5/6 bg-slate-200" />
+                      <div className="h-1 w-full bg-slate-200" />
+                    </div>
+                  </div>
+                </div>
+                <div className="w-full">
+                  <p className="font-bold text-slate-800">Ultra Modern</p>
+                  <p className="text-[10px] text-slate-500">Sidebar layout</p>
+                </div>
               </button>
             </div>
           </div>
@@ -116,12 +145,12 @@ export default function ResumeBuilder() {
           <div 
             ref={resumeRef}
             className={`bg-white w-[595px] min-h-[842px] p-12 shadow-2xl transition-all
-              ${template === 'creative' ? 'border-t-[12px] border-blue-600' : 'border-t border-slate-100'}`}
+              ${template === 'modern' ? 'border-t-[12px] border-blue-600' : 'border-t border-slate-100'}`}
           >
             {resumeData ? (
               <div className="space-y-8">
                 {/* Header Section */}
-                <header className={template === 'creative' ? 'text-left' : 'text-center border-b pb-6'}>
+                <header className={template === 'modern' ? 'text-left' : 'text-center border-b pb-6'}>
                   <h1 className="text-4xl font-black uppercase tracking-tight text-slate-900">
                     {resumeData.basics?.name || "Saurabh Kumar"}
                   </h1>
