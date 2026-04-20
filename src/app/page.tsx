@@ -8,11 +8,12 @@ export default function ResumeBuilder() {
   const [inputText, setInputText] = useState("");
   const [resumeData, setResumeData] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [template, setTemplate] = useState('modern'); // 'modern' or 'classic'
+  const [template, setTemplate] = useState('professional'); 
   const resumeRef = useRef<HTMLDivElement>(null);
 
   const handleGenerate = async () => {
-    if (!inputText) return;
+    if (!inputText) return alert("Please enter your details first!");
+    
     setIsGenerating(true);
     try {
       const response = await fetch('/api/parse-resume', {
@@ -20,12 +21,18 @@ export default function ResumeBuilder() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rawText: inputText }),
       });
+
+      if (!response.ok) throw new Error("Failed to connect to AI");
+
       const data = await response.json();
       if(data.success && data.data) {
         setResumeData(data.data);
       } else {
         alert("Failed to parse resume.");
       }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("AI Error: Make sure your API Key is set in the .env file.");
     } finally {
       setIsGenerating(false);
     }
@@ -37,116 +44,143 @@ export default function ResumeBuilder() {
     const canvas = await html2canvas(element, { scale: 2 });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgProps = pdf.getImageProperties(imgData);
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save("My_AI_Resume.pdf");
+    pdf.save("AscendCV_Resume.pdf");
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <nav className="p-4 border-b bg-white flex justify-between items-center">
-        <h1 className="font-bold text-xl text-blue-600">AscendCV.Ai</h1>
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
+      {/* --- Navbar --- */}
+      <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md px-8 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">A</div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-800">AscendCV.Ai</h1>
+        </div>
         {resumeData && (
           <button 
             onClick={downloadPDF}
-            className="bg-slate-900 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-600 transition"
+            className="bg-slate-900 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-600 transition shadow-lg"
           >
             Download PDF
           </button>
         )}
       </nav>
 
-      <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <section className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border">
-            <h2 className="font-bold mb-4">1. Enter Experience</h2>
+      <main className="max-w-[1440px] mx-auto p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
+        
+        {/* --- Left Side: Controls --- */}
+        <section className="lg:col-span-5 space-y-8">
+          <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+            <h2 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">1. Career Details</h2>
             <textarea 
-              className="w-full h-60 p-4 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="Paste your raw career details here..."
+              value={inputText}
               onChange={(e) => setInputText(e.target.value)}
+              className="w-full h-64 p-5 border-2 border-slate-50 rounded-2xl bg-slate-50 focus:bg-white focus:border-blue-500 outline-none transition-all resize-none"
+              placeholder="Example: I am a DevOps Engineer at Deutsche Bank. I optimized ETL pipelines and used Jenkins for CI/CD..."
             />
             <button 
               onClick={handleGenerate}
-              className="w-full mt-4 bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-100"
+              disabled={isGenerating}
+              className={`w-full mt-6 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2
+                ${isGenerating ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200'}`}
             >
-              {isGenerating ? "Processing..." : "Generate AI Resume"}
+              {isGenerating ? "✨ AI is Working..." : "✨ Generate AI Resume"}
             </button>
           </div>
 
-          <div>
-            <h2 className="font-bold mb-4">2. Choose Template</h2>
+          <div className="space-y-4">
+            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">2. Choose Style</h2>
             <div className="grid grid-cols-2 gap-4">
               <button 
-                onClick={() => setTemplate('classic')}
-                className={`p-4 border-2 rounded-xl text-left ${template === 'classic' ? 'border-blue-500 bg-blue-50' : 'border-slate-100'}`}
+                onClick={() => setTemplate('professional')}
+                className={`p-4 border-2 rounded-2xl text-left transition-all ${template === 'professional' ? 'border-blue-600 bg-blue-50' : 'bg-white border-slate-100'}`}
               >
-                <div className="w-full h-24 bg-white border mb-2 shadow-sm rounded flex flex-col p-2 gap-1">
-                  <div className="h-2 w-1/2 bg-slate-200" />
-                  <div className="h-1 w-full bg-slate-100" />
-                  <div className="h-1 w-full bg-slate-100" />
-                </div>
-                <p className="font-bold text-sm">Classic HBS</p>
+                <p className="font-bold">Professional</p>
+                <p className="text-xs text-slate-400">Clean & ATS-friendly</p>
               </button>
-              
               <button 
-                onClick={() => setTemplate('modern')}
-                className={`p-4 border-2 rounded-xl text-left ${template === 'modern' ? 'border-blue-500 bg-blue-50' : 'border-slate-100'}`}
+                onClick={() => setTemplate('creative')}
+                className={`p-4 border-2 rounded-2xl text-left transition-all ${template === 'creative' ? 'border-blue-600 bg-blue-50' : 'bg-white border-slate-100'}`}
               >
-                <div className="w-full h-24 bg-white border mb-2 shadow-sm rounded flex flex-col items-center p-2 gap-1">
-                  <div className="h-4 w-4 rounded-full bg-blue-100 mb-1" />
-                  <div className="h-2 w-2/3 bg-slate-200" />
-                  <div className="h-1 w-full bg-slate-100" />
-                </div>
-                <p className="font-bold text-sm">Ultra Modern</p>
+                <p className="font-bold">Creative</p>
+                <p className="text-xs text-slate-400">Stand out visually</p>
               </button>
             </div>
           </div>
         </section>
 
-        {/* --- Resume Preview Area --- */}
-        <section className="bg-slate-200 p-8 rounded-3xl overflow-auto h-[800px] flex justify-center">
+        {/* --- Right Side: The Actual Resume --- */}
+        <section className="lg:col-span-7 bg-slate-200 rounded-[2.5rem] p-8 lg:p-12 shadow-inner overflow-y-auto max-h-[900px] flex justify-center">
           <div 
             ref={resumeRef}
-            className={`bg-white w-[595px] min-h-[842px] p-12 shadow-2xl transition-all ${template === 'modern' ? 'border-t-8 border-blue-600' : ''}`}
+            className={`bg-white w-[595px] min-h-[842px] p-12 shadow-2xl transition-all
+              ${template === 'creative' ? 'border-t-[12px] border-blue-600' : 'border-t border-slate-100'}`}
           >
             {resumeData ? (
-              <div>
-                <h1 className={`text-3xl font-black ${template === 'modern' ? 'text-blue-600' : 'text-slate-900'}`}>
-                  {resumeData.basics.name}
-                </h1>
-                <p className="text-slate-500 font-medium mb-8 flex justify-between">
-                  <span>{resumeData.basics.email} | {resumeData.basics.phone}</span>
-                  <span>{resumeData.basics.location}</span>
-                </p>
-                
-                {resumeData.summary && (
-                  <p className="text-slate-700 text-sm mb-8 leading-relaxed">
-                    {resumeData.summary}
-                  </p>
-                )}
-                
-                <h3 className="font-bold border-b-2 mb-4 uppercase tracking-widest text-xs">Experience</h3>
-                {resumeData.experience.map((exp: any, i: number) => (
-                  <div key={i} className="mb-6">
-                    <p className="font-bold text-slate-800">{exp.company} — {exp.role}</p>
-                    <p className="text-xs text-slate-500 mb-2 uppercase tracking-wide">
-                      {exp.startDate} - {exp.isCurrent ? "Present" : exp.endDate || ""}
-                    </p>
-                    <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 mt-2">
-                      {exp.bullets.map((b: string, j: number) => (
-                        <li key={j} className="leading-relaxed">{b}</li>
-                      ))}
-                    </ul>
+              <div className="space-y-8">
+                {/* Header Section */}
+                <header className={template === 'creative' ? 'text-left' : 'text-center border-b pb-6'}>
+                  <h1 className="text-4xl font-black uppercase tracking-tight text-slate-900">
+                    {resumeData.basics?.name || "Saurabh Kumar"}
+                  </h1>
+                  <div className="flex justify-center gap-4 text-xs font-bold text-slate-500 mt-2 uppercase tracking-widest">
+                    <span>{resumeData.basics?.email}</span>
+                    <span>•</span>
+                    <span>{resumeData.basics?.location}</span>
                   </div>
-                ))}
+                </header>
+
+                {/* Summary Section */}
+                <section>
+                   <p className="text-sm leading-relaxed text-slate-600 italic">
+                     {resumeData.summary}
+                   </p>
+                </section>
+
+                {/* Experience Section */}
+                <section className="space-y-6">
+                  <h3 className="font-bold text-blue-600 uppercase tracking-[0.2em] text-[10px] border-b pb-1">Work Experience</h3>
+                  {resumeData.experience?.map((job: any, i: number) => (
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-between items-baseline">
+                        <h4 className="font-bold text-slate-800 text-sm">{job.company}</h4>
+                        <span className="text-[10px] font-bold text-slate-400">{job.startDate} - {job.isCurrent ? 'Present' : job.endDate || ''}</span>
+                      </div>
+                      <p className="text-xs font-semibold text-slate-500">{job.role}</p>
+                      <ul className="list-disc list-outside ml-4 mt-2 text-[11px] text-slate-600 space-y-1.5">
+                        {job.bullets?.map((bullet: string, j: number) => (
+                          <li key={j}>{bullet}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </section>
+
+                {/* Skills Section */}
+                {resumeData.skills?.technical && (
+                  <section className="space-y-3">
+                     <h3 className="font-bold text-blue-600 uppercase tracking-[0.2em] text-[10px] border-b pb-1">Technical Skills</h3>
+                     <div className="flex flex-wrap gap-2">
+                       {resumeData.skills?.technical?.map((skill: string, i: number) => (
+                         <span key={i} className="px-3 py-1 bg-slate-50 border rounded-full text-[10px] font-bold text-slate-600">
+                           {skill}
+                         </span>
+                       ))}
+                     </div>
+                  </section>
+                )}
               </div>
             ) : (
-              <div className="text-center text-slate-300 mt-40">Your AI Resume will appear here...</div>
+              <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4">
+                 <div className="w-16 h-16 border-4 border-dashed border-slate-200 rounded-full animate-spin" />
+                 <p className="font-medium italic">Your AI Resume will appear here...</p>
+              </div>
             )}
           </div>
         </section>
+
       </main>
     </div>
   );

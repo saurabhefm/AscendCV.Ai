@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { generateObject } from 'ai';
+import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { ResumeDataSchema } from '@/lib/schemas/resume';
 
@@ -36,22 +36,36 @@ export async function POST(req: Request) {
       );
     }
 
-    const { object } = await generateObject({
+    const { text } = await generateText({
       model: openai('gpt-4o'),
-      schema: ResumeDataSchema,
-      prompt: `Parse and transform the following resume data:\n\n${rawText}`,
+      prompt: `Parse and transform the following resume data:\n\n${rawText}\n\nIMPORTANT: Return ONLY valid JSON format representing the requested schema. No markdown formatting.`,
       system: PARSER_SYSTEM_PROMPT,
       temperature: 0.5,
     });
 
+    // 1 & 2. Capture raw string response and use Regex to strip away any triple backticks
+    let cleanedText = text.replace(/^```(?:json)?\n?/im, '').replace(/\n?```$/im, '').trim();
+
+    // 3 & 4. Parse only the clean JSON string and add try-catch block
+    let parsedData;
+    try {
+      parsedData = JSON.parse(cleanedText);
+    } catch (parseError) {
+      console.error('[JSON_PARSE_ERROR]', parseError, cleanedText);
+      return NextResponse.json(
+        { error: 'Failed to parse the AI output as valid JSON.' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      data: object,
+      data: parsedData,
     });
   } catch (error) {
     console.error('[PARSE_RESUME_ERROR]', error);
     return NextResponse.json(
-      { error: 'Failed to parse resume content.' },
+      { error: 'Failed to process resume content.' },
       { status: 500 }
     );
   }
